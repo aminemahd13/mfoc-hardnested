@@ -41,5 +41,9 @@ Then go in device manager and disable "Allow the computer to turn off this devic
 Put one MIFARE Classic tag that you want keys recovering;
 Lauching mfoc, you will need to pass options, see
 ```
+mfoc-hardnested -O mycard.mfd -k keys.txt -P 500 -T 5
+```
+
+```
 mfoc-hardnested -h
 ```
