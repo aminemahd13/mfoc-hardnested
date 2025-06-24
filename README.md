@@ -39,11 +39,20 @@ Needs libusb0.dll and nfc.dll in the path, better on the same directory.
 Needs to install libusbK v3.0.7.0, using Zadig https://zadig.akeo.ie/, go to Option, List All Devices, select your reader, select libusbK(v3.0.7.0) and click on replace driver.
 Then go in device manager and disable "Allow the computer to turn off this device to save power" in your reader under libusbK USB Devices.
 Put one MIFARE Classic tag that you want keys recovering;
-Lauching mfoc, you will need to pass options, see
+Lauching mfoc, you will need to pass options, see:
+```
+mfoc-hardnested -h
+```
+to copy a new card you can use :
 ```
 mfoc-hardnested -O mycard.mfd -k keys.txt -P 500 -T 5
 ```
+you will get an output in the terminal, save it as you will need it later, if the card you are copying has the same number of sectors as the one your are copying to you can directly use this command to write to the new card :
+```
+nfc-mfclassic W a mycard.mfd
+```
+if the cards have different sector numbers, the card you are copying to needs to have a larger number of sectors, and you MUST create a new .mfd file to make the old dump the same size expected by nfc-mfclassic, to do that, modify the python script named padding.py to use the actual data you copied from your terminal earlier and run it, this will create a 1K .mfd file (the most common size in chinese NFC clones) and then run the following command to write it to your new blank card :
 
 ```
-mfoc-hardnested -h
+nfc-mfclassic W a mycard_1k.mfd
 ```
