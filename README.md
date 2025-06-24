@@ -1,58 +1,144 @@
-MFOC is an open source implementation of "offline nested" attack by Nethemba.
-Later was added so called "hardnested" attack by Carlo Meijer and Roel Verdult.
+# MFOC-Hardnested (with Cross-Card-Size Copy Support)
 
-This program allow to recover authentication keys from MIFARE Classic card.
+**MFOC** is an open-source implementation of the “offline nested” attack on MIFARE Classic cards, originally developed by **Nethemba**. It was later extended to include the powerful **hardnested** attack, designed by **Carlo Meijer** and **Roel Verdult**.
 
-Please note MFOC is able to recover keys from target only if it have a known key: default one (hardcoded in MFOC) or custom one (user provided using command line).
+this project includes a complete **Win32 x64 port** using native Windows tools and builds with **Visual Studio 2019** and the **LLVM `clang-cl`** toolchain. GNU toolchain support is maintained using `autotools` + `gcc` (as in the original project).
 
-This is a port to win32 x64 platform using native tools (Visual Studio 2019 + LLVM clang-cl toolchain).
-This tree was also reworked for gnu toolchain (autotool + gcc like the original).
- 
-Based on the idea by vk496 to integrate mylazycracker into mfoc, forked from his tree.
+This fork by **Amine Mahdane** introduces **support for copying across different MIFARE Classic card sizes**, such as:
 
-For credits (there are many) just look at the AUTHORS file.
+* 1K → 4K
+* 320B (Mini) → 1K or 4K
 
-Uses 
-		libnfc 			https://github.com/nfc-tools/libnfc/
-		libusb-win32 	https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/1.2.6.0/
-		pthreads4w		https://sourceforge.net/projects/pthreads4w/
-		liblzma			https://tukaani.org/xz/
+---
 
-pthreads4w and liblzma are static linked.
-All these libs are precompiled and included in src\lib
+## ⚠️ Disclaimer
 
-# Build from source
-Windows:
-Make sure you have Visual Studio 2019 with Desktop developement with C++, C++ Clang Compiler for Windows and C++ Clang-cl for v142 build tools installed.
-Open the solution and start compile.
-The compiled zip package will be in dist.
+MFOC can **only recover keys** from a MIFARE Classic tag **if at least one sector uses a known key**:
 
-Linux:
-```
+* A **default key** (already built into MFOC), or
+* A **custom key** provided by the user via command-line.
+
+---
+
+## 🔧 Features
+
+* Hardnested attack support
+* Cross-size cloning support (Mini to 1K/4K, 1K to 4K)
+* Compatible with `nfc-mfclassic` for writing `.mfd` dumps
+* Includes precompiled dependencies for Windows build
+
+---
+
+## 📦 Dependencies
+
+* [`libnfc`](https://github.com/nfc-tools/libnfc/)
+* [`libusb-win32`](https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/1.2.6.0/)
+* [`pthreads4w`](https://sourceforge.net/projects/pthreads4w/)
+* [`liblzma`](https://tukaani.org/xz/)
+
+> **Note:** `pthreads4w` and `liblzma` are statically linked. All required libraries are precompiled and included in `src\lib`.
+
+---
+
+## 🛠️ Build Instructions
+
+### Windows
+
+1. Install **Visual Studio 2019** with the following components:
+
+   * Desktop Development with C++
+   * C++ Clang Compiler for Windows
+   * C++ Clang-cl for v142 Build Tools
+
+2. Open the solution in Visual Studio.
+
+3. Build the solution. The compiled zip package will appear in the `dist` folder.
+
+---
+
+### Linux
+
+```sh
 autoreconf -vis
 ./configure
 make && sudo make install
 ```
 
-# Usage #
-Needs libusb0.dll and nfc.dll in the path, better on the same directory.
-Needs to install libusbK v3.0.7.0, using Zadig https://zadig.akeo.ie/, go to Option, List All Devices, select your reader, select libusbK(v3.0.7.0) and click on replace driver.
-Then go in device manager and disable "Allow the computer to turn off this device to save power" in your reader under libusbK USB Devices.
-Put one MIFARE Classic tag that you want keys recovering;
-Lauching mfoc, you will need to pass options, see:
-```
+---
+
+## 🚀 Usage Guide
+
+### Windows Setup
+
+1. Ensure `libusb0.dll` and `nfc.dll` are in the same directory as the executable (or in your system PATH).
+
+2. Install **libusbK v3.0.7.0** using [Zadig](https://zadig.akeo.ie/):
+
+   * Go to **Options > List All Devices**
+   * Select your NFC reader
+   * Choose **libusbK (v3.0.7.0)** as the driver
+   * Click **Replace Driver**
+
+3. In **Device Manager**, disable the **power-saving option**:
+
+   * Go to your reader under **libusbK USB Devices**
+   * Right-click → Properties → Power Management
+   * Uncheck "Allow the computer to turn off this device to save power"
+
+---
+
+### Reading a Card
+
+1. Place the MIFARE Classic card on the reader.
+2. Run:
+
+```sh
 mfoc-hardnested -h
 ```
-to copy a new card you can use :
-```
+
+To perform a full dump:
+
+```sh
 mfoc-hardnested -O mycard.mfd -k keys.txt -P 500 -T 5
 ```
-you will get an output in the terminal, save it as you will need it later, if the card you are copying has the same number of sectors as the one your are copying to you can directly use this command to write to the new card :
-```
+
+---
+
+### Writing to a New Card
+
+#### ✅ If the card sizes are the same:
+
+```sh
 nfc-mfclassic W a mycard.mfd
 ```
-if the cards have different sector numbers, the card you are copying to needs to have a larger number of sectors, and you MUST create a new .mfd file to make the old dump the same size expected by nfc-mfclassic, to do that, modify the python script named padding.py to use the actual data you copied from your terminal earlier and run it, this will create a 1K .mfd file (the most common size in chinese NFC clones) and then run the following command to write it to your new blank card :
 
+#### ⚠️ If writing to a larger card (e.g., 320B → 1K):
+
+You **must pad** the dump to match the size of the target card. Follow these steps:
+
+1. Open the provided `padding.py` script.
+2. Replace the block list with your copied data from the terminal output.
+3. Run the script to generate a padded `.mfd` file:
+
+```sh
+python padding.py
 ```
+
+This creates `mycard_1k.mfd`.
+
+4. Write it to the new blank card:
+
+```sh
 nfc-mfclassic W a mycard_1k.mfd
 ```
+
+---
+
+## 🙏 Credits
+
+This project is based on work by many contributors. Please see the `AUTHORS` file for full attribution.
+
+Special thanks to:
+
+* **vk496** for integrating `mylazycracker` into MFOC
+* **Nethemba**, **Carlo Meijer**, and **Roel Verdult** for their foundational work
