@@ -142,7 +142,7 @@ nfc-mfclassic W a mycard_1k.mfd
 | Vanity SAK | SAK Value represented in Block 0 of a Mifare Classic, on legitimate cards this does not inform the value of the WUP-SAK.    |
 | Magic Card | An illegitimate card capable of changing it's UID; some magic cards are also able to change other values such as ATQA/SAK. |
 
-![image](https://gist.github.com/user-attachments/assets/9a305317-49f4-4f88-bc17-85ae8872a4b3)
+![image](card_blocks.jpg)
 
 
 ### What is SAK Swapping? 
